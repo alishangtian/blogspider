@@ -1,6 +1,6 @@
-package com.alishangtian.blogspider.spider.jianshu;
+package com.alishangtian.blogspider.extractor.jianshu;
 
-import com.alishangtian.blogspider.spider.AbstractSpider;
+import com.alishangtian.blogspider.extractor.AbstractExtractor;
 import lombok.extern.log4j.Log4j2;
 import org.apache.commons.lang3.StringUtils;
 import org.jsoup.Jsoup;
@@ -22,7 +22,7 @@ import java.util.concurrent.atomic.AtomicLong;
  */
 @Service
 @Log4j2
-public class JanShuSpider extends AbstractSpider {
+public class JanShuExtractor extends AbstractExtractor {
     static Map<String, String> hTagMap = new HashMap<>();
 
     static {

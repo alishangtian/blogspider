@@ -1,4 +1,4 @@
-package com.alishangtian.blogspider.spider;
+package com.alishangtian.blogspider.extractor;
 
 import java.io.IOException;
 
@@ -7,7 +7,7 @@ import java.io.IOException;
  * @Date 2020/4/24 下午2:22
  * @Author maoxiaobing
  **/
-public abstract class AbstractSpider implements Spider {
+public abstract class AbstractExtractor implements Extractor {
     @Override
     public abstract String crawling(String url) throws IOException, Exception;
 }
