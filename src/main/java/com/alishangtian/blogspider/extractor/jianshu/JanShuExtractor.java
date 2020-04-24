@@ -6,14 +6,19 @@ import org.apache.commons.lang3.StringUtils;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
+import org.jsoup.nodes.Node;
+import org.jsoup.nodes.TextNode;
 import org.jsoup.select.Elements;
 import org.springframework.stereotype.Service;
 
 import java.net.URL;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.Consumer;
 
 /**
  * @Author maoxiaobing
@@ -26,18 +31,12 @@ public class JanShuExtractor extends AbstractExtractor {
     static Map<String, String> hTagMap = new HashMap<>();
 
     static {
-        hTagMap.put("H1", "# ");
-        hTagMap.put("H2", "## ");
-        hTagMap.put("H3", "### ");
-        hTagMap.put("H4", "#### ");
-        hTagMap.put("H5", "##### ");
-        hTagMap.put("H6", "###### ");
         hTagMap.put("h1", "# ");
         hTagMap.put("h2", "## ");
         hTagMap.put("h3", "### ");
         hTagMap.put("h4", "#### ");
-        hTagMap.put("h5", "##### ");
-        hTagMap.put("h6", "###### ");
+        hTagMap.put("h5", "#### ");
+        hTagMap.put("h6", "#### ");
     }
 
     private static final int DEFAULT_TIME_OUT = 5 * 1000;
@@ -60,13 +59,14 @@ public class JanShuExtractor extends AbstractExtractor {
      * @Return java.lang.String
      */
     @Override
-    public String crawling(String url) throws Exception {
+    public String extract(String url, String articleSelector) throws Exception {
         StringBuilder builder = new StringBuilder();
         Future<String> future = executor.submit(() -> {
             try {
-                Document doc = Jsoup.parse(new URL(url), DEFAULT_TIME_OUT);
-                Elements eles = doc.select("article");
-                printEle(eles.first().children(), builder);
+                URL urlObj = new URL(url);
+                Document doc = Jsoup.parse(urlObj, DEFAULT_TIME_OUT);
+                Elements eles = doc.select(articleSelector);
+                extractMd(eles.first().childNodes(), builder, urlObj.getHost());
                 return builder.toString();
             } catch (Exception e) {
                 log.error("{}", e);
@@ -76,46 +76,74 @@ public class JanShuExtractor extends AbstractExtractor {
         return future.get();
     }
 
-    public void printEle(Elements eles, StringBuilder builder) {
-        for (Element ele : eles) {
-            String nodeName = ele.nodeName().toLowerCase();
-            String mdTag;
-            //h tag
-            if (StringUtils.isNotEmpty(mdTag = hTagMap.get(ele.nodeName()))) {
-                builder.append(mdTag).append(ele.text()).append("\n\n");
-                continue;
+    /**
+     * 提取文章为markdown文档
+     *
+     * @param eles
+     * @param builder
+     * @param host
+     */
+    public void extractMd(List<Node> eles, StringBuilder builder, String host) {
+        for (Node node : eles) {
+            if (node instanceof Element) {
+                Element ele = (Element) node;
+                String nodeName = ele.nodeName().toLowerCase();
+                String mdTag;
+                //h tag
+                if (StringUtils.isNotEmpty(mdTag = hTagMap.get(ele.nodeName()))) {
+                    builder.append("\n").append(mdTag).append(ele.text()).append("\n");
+                    continue;
+                }
+                // img
+                if (nodeName.equals("div") && ele.hasClass("image-package")) {
+                    Element eleImg = ele.selectFirst("img");
+                    String imgSrc = eleImg.attr("abs:data-original-src");
+                    builder.append("\n").append(String.format("![img](%s)", imgSrc)).append("\n");
+                    continue;
+                }
+                // code
+                if (nodeName.equals("pre")) {
+                    builder.append("\n").append("```java").append("\n").append(ele.text()).append("\n").append("```").append("\n");
+                    continue;
+                }
+                // blockquote
+                if (nodeName.equals("blockquote")) {
+                    builder.append("\n").append(ele.outerHtml()).append("\n");
+                    continue;
+                }
+                // a
+                if (nodeName.equals("a")) {
+                    builder.append("\n").append(ele.outerHtml()).append("\n");
+                    continue;
+                }
+                // strong
+                if (nodeName.equals("strong")) {
+                    builder.append("\n").append(String.format("***%s***", ele.ownText())).append("\n");
+                    continue;
+                }
+                // ul
+                if (nodeName.equals("ul")) {
+                    Elements lis = ele.select("li");
+                    lis.forEach(element -> {
+                        builder.append("\n").append(String.format("- %s", element.text())).append("\n");
+                    });
+                    continue;
+                }
+                if (nodeName.equals("ol")) {
+                    Elements lis = ele.select("li");
+                    for (int i = 0; i < lis.size(); i++) {
+                        builder.append("\n").append(String.format("%s. %s", i + 1, lis.get(i).text())).append("\n");
+                    }
+                    continue;
+                }
+            } else if (node instanceof TextNode) {
+                TextNode textNode = (TextNode) node;
+                if (StringUtils.isNotEmpty(textNode.text())) {
+                    builder.append(textNode.text());
+                }
             }
-            // img
-            if (nodeName.equals("div") && ele.hasClass("image-package")) {
-                Element eleImg = ele.selectFirst("img");
-                builder.append(String.format("![img](%s)", eleImg.attr("data-original-src"))).append("\n\n");
-                continue;
-            }
-            // code
-            if (nodeName.equals("pre")) {
-                builder.append("```java").append("\n").append(ele.text()).append("\n\n").append("```").append("\n\n");
-                continue;
-            }
-            // blockquote
-            if (nodeName.equals("blockquote")) {
-                builder.append(ele.outerHtml()).append("\n\n");
-                continue;
-            }
-            // a
-            if (nodeName.equals("a")) {
-                builder.append(ele.outerHtml()).append("\n\n");
-                continue;
-            }
-            // strong
-            if (nodeName.equals("strong")) {
-                builder.append(String.format("***%s***", ele.ownText())).append("\n\n");
-                continue;
-            }
-            // own text is not empty
-            if (StringUtils.isNotEmpty(ele.ownText())) {
-                builder.append(ele.text()).append("\n\n");
-            }
-            printEle(ele.children(), builder);
+            extractMd(node.childNodes(), builder, host);
         }
     }
+
 }

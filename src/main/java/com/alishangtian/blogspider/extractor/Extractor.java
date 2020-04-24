@@ -16,6 +16,6 @@ public interface Extractor {
      * @Param [url]
      * @Return java.lang.String
      */
-    public String crawling(String url) throws IOException, Exception;
+    public String extract(String url, String articleSelector) throws IOException, Exception;
 
 }
