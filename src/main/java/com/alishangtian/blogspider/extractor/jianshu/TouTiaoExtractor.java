@@ -1,6 +1,9 @@
 package com.alishangtian.blogspider.extractor.jianshu;
 
 import com.alishangtian.blogspider.extractor.AbstractExtractor;
+import com.alishangtian.blogspider.util.GsonUtils;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import lombok.extern.log4j.Log4j2;
 import org.apache.commons.lang3.StringUtils;
 import org.jsoup.Jsoup;
@@ -11,14 +14,18 @@ import org.jsoup.nodes.TextNode;
 import org.jsoup.select.Elements;
 import org.springframework.stereotype.Service;
 
+import javax.script.ScriptContext;
+import javax.script.ScriptEngine;
+import javax.script.ScriptEngineManager;
 import java.net.URL;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
+import java.util.function.Predicate;
 
 /**
  * @Author maoxiaobing
@@ -27,8 +34,8 @@ import java.util.function.Consumer;
  */
 @Service
 @Log4j2
-public class JanShuExtractor extends AbstractExtractor {
-    private static final String SERVICE_CODE = "jianshu";
+public class TouTiaoExtractor extends AbstractExtractor {
+    private static final String SERVICE_CODE = "toutiao";
     static Map<String, String> hTagMap = new HashMap<>();
 
     static {
@@ -40,7 +47,7 @@ public class JanShuExtractor extends AbstractExtractor {
         hTagMap.put("h6", "#### ");
     }
 
-    private static final int DEFAULT_TIME_OUT = 5 * 1000;
+    private static final int DEFAULT_TIME_OUT = 60 * 1000;
     private ThreadPoolExecutor executor = new ThreadPoolExecutor(8, 10, 60, TimeUnit.SECONDS, new ArrayBlockingQueue<>(1000), new ThreadFactory() {
         AtomicLong num = new AtomicLong();
 
@@ -51,6 +58,10 @@ public class JanShuExtractor extends AbstractExtractor {
             return a;
         }
     });
+    /**
+     * script执行引擎
+     */
+    private ScriptEngine engine = new ScriptEngineManager().getEngineByName("JavaScript");
 
     /**
      * @Author maoxiaobing
@@ -60,14 +71,12 @@ public class JanShuExtractor extends AbstractExtractor {
      * @Return java.lang.String
      */
     @Override
-    public String extract(String url, String articleSelector) throws Exception {
+    public String extract(String body, String articleSelector) throws Exception {
         StringBuilder builder = new StringBuilder();
         Future<String> future = executor.submit(() -> {
             try {
-                URL urlObj = new URL(url);
-                Document doc = Jsoup.parse(urlObj, DEFAULT_TIME_OUT);
-                Elements eles = doc.select(articleSelector);
-                extractMd(eles.first().childNodes(), builder, urlObj.getHost());
+                Document doc = Jsoup.parse(body);
+                extractMd(doc.selectFirst(articleSelector).childNodes(), builder);
                 return builder.toString();
             } catch (Exception e) {
                 log.error("{}", e);
@@ -83,14 +92,13 @@ public class JanShuExtractor extends AbstractExtractor {
     }
 
     /**
-     * 提取文章为markdown文档
+     * 提取json中的文档
      *
-     * @param eles
+     * @param nodes
      * @param builder
-     * @param host
      */
-    public void extractMd(List<Node> eles, StringBuilder builder, String host) {
-        for (Node node : eles) {
+    public void extractMd(List<Node> nodes, StringBuilder builder) {
+        for (Node node : nodes) {
             if (node instanceof Element) {
                 Element ele = (Element) node;
                 String nodeName = ele.nodeName().toLowerCase();
@@ -101,9 +109,8 @@ public class JanShuExtractor extends AbstractExtractor {
                     continue;
                 }
                 // img
-                if (nodeName.equals("div") && ele.hasClass("image-package")) {
-                    Element eleImg = ele.selectFirst("img");
-                    String imgSrc = eleImg.attr("abs:data-original-src");
+                if (nodeName.equals("img")) {
+                    String imgSrc = ele.attr("abs:src");
                     builder.append("\n").append(String.format("![img](%s)", imgSrc)).append("\n");
                     continue;
                 }
@@ -117,7 +124,7 @@ public class JanShuExtractor extends AbstractExtractor {
                     Elements imgs = ele.select("img");
                     if (null != imgs && imgs.size() > 0) {
                         Element imgEle = imgs.first();
-                        String imgSrc = imgEle.attr("abs:data-original-src");
+                        String imgSrc = imgEle.attr("abs:src");
                         builder.append("\n").append(ele.text()).append("\n");
                         builder.append("\n").append(String.format("![img](%s)", imgSrc)).append("\n");
                     } else {
@@ -153,10 +160,10 @@ public class JanShuExtractor extends AbstractExtractor {
             } else if (node instanceof TextNode) {
                 TextNode textNode = (TextNode) node;
                 if (StringUtils.isNotEmpty(textNode.text())) {
-                    builder.append(textNode.text());
+                    builder.append("\n").append(textNode.text()).append("\n");
                 }
             }
-            extractMd(node.childNodes(), builder, host);
+            extractMd(node.childNodes(), builder);
         }
     }
 

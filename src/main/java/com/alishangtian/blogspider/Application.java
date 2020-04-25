@@ -1,13 +1,12 @@
 package com.alishangtian.blogspider;
 
+import com.alishangtian.blogspider.extractor.ExtractorManager;
 import com.alishangtian.blogspider.extractor.jianshu.JanShuExtractor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 /**
  * @author maoxiaobing
@@ -17,15 +16,20 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 public class Application {
     @Autowired
-    JanShuExtractor janShuExtractor;
+    ExtractorManager extractorManager;
 
     public static void main(String[] args) {
         SpringApplication.run(Application.class, args);
     }
 
-    @GetMapping("/janshu/spider")
-    public String parseJanShu(@RequestParam String url, @RequestParam String articleSelector) throws Exception {
-        return janShuExtractor.extract(url,articleSelector);
+    @GetMapping("/extract/jianshu")
+    public String extractJanshu(@RequestParam String url, @RequestParam String articleSelector) throws Exception {
+        return extractorManager.getExtractor("jianshu").extract(url, articleSelector);
+    }
+
+    @PostMapping("/extract/toutiao")
+    public String extractToutiao(@RequestBody String body, @RequestParam String articleSelector) throws Exception {
+        return extractorManager.getExtractor("toutiao").extract(body, articleSelector);
     }
 
 }

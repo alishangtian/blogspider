@@ -18,4 +18,11 @@ public interface Extractor {
      */
     public String extract(String url, String articleSelector) throws IOException, Exception;
 
+    /**
+     * 获取服务编号
+     *
+     * @return
+     */
+    public String getServiceCode();
+
 }
