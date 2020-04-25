@@ -104,6 +104,9 @@ public class TouTiaoExtractor extends AbstractExtractor {
                 String nodeName = ele.nodeName().toLowerCase();
                 String mdTag;
                 //h tag
+                if (nodeName.equals("div") && (ele.hasClass("article-sub") || ele.hasClass("article-tag"))) {
+                    continue;
+                }
                 if (StringUtils.isNotEmpty(mdTag = hTagMap.get(ele.nodeName()))) {
                     builder.append("\n").append(mdTag).append(ele.text()).append("\n");
                     continue;
