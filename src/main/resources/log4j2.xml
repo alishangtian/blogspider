@@ -2,7 +2,7 @@
 <configuration>
     <properties>
         <Property name="PRO_NAME">blogspider</Property>
-        <Property name="LOG_HOME">/Users/A007/log/${PRO_NAME}</Property>
+        <Property name="LOG_HOME">/usr/local/log/${PRO_NAME}</Property>
         <Property name="LOG_PATTERN">[%-5level] %date{yyyy-MM-dd HH:mm:ss.SSS} [%X{reqId}] [%t]%x [%c{1.}.%M()]
             [%message]%n
         </Property>
