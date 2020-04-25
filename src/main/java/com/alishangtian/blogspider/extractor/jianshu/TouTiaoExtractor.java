@@ -1,9 +1,6 @@
 package com.alishangtian.blogspider.extractor.jianshu;
 
 import com.alishangtian.blogspider.extractor.AbstractExtractor;
-import com.alishangtian.blogspider.util.GsonUtils;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
 import lombok.extern.log4j.Log4j2;
 import org.apache.commons.lang3.StringUtils;
 import org.jsoup.Jsoup;
@@ -14,18 +11,13 @@ import org.jsoup.nodes.TextNode;
 import org.jsoup.select.Elements;
 import org.springframework.stereotype.Service;
 
-import javax.script.ScriptContext;
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
-import java.net.URL;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.function.Consumer;
-import java.util.function.Predicate;
 
 /**
  * @Author maoxiaobing

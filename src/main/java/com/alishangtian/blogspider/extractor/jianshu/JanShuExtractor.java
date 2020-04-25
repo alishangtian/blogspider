@@ -12,13 +12,11 @@ import org.jsoup.select.Elements;
 import org.springframework.stereotype.Service;
 
 import java.net.URL;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.function.Consumer;
 
 /**
  * @Author maoxiaobing
