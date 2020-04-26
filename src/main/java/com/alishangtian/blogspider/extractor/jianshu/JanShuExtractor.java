@@ -2,7 +2,6 @@ package com.alishangtian.blogspider.extractor.jianshu;
 
 import com.alishangtian.blogspider.extractor.AbstractExtractor;
 import lombok.extern.log4j.Log4j2;
-import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -111,7 +110,6 @@ public class JanShuExtractor extends AbstractExtractor {
      *
      * @param eles
      * @param builder
-     * @param host
      */
     public void extractMd(List<Node> eles, StringBuilder builder) {
         for (Node node : eles) {
@@ -180,7 +178,7 @@ public class JanShuExtractor extends AbstractExtractor {
                 TextNode textNode = (TextNode) node;
                 if (StringUtils.isNotEmpty(textNode.text())) {
                     if (node.parentNode().nodeName().equals("p") && node.siblingNodes().isEmpty()) {
-                        builder.append(textNode.text()).append("\n");
+                        builder.append("\n").append(textNode.text()).append("\n");
                     } else {
                         builder.append(textNode.text());
                     }
