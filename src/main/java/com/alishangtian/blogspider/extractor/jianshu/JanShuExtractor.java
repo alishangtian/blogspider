@@ -12,6 +12,7 @@ import org.jsoup.nodes.TextNode;
 import org.jsoup.select.Elements;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.List;
@@ -53,20 +54,44 @@ public class JanShuExtractor extends AbstractExtractor {
 
     /**
      * @Author maoxiaobing
+     * @Description extractFromHtml
+     * @Date 2020/4/26
+     * @Param [html, articleSelector]
+     * @Return java.lang.String
+     */
+    @Override
+    public String extractFromHtml(String html, String articleSelector) throws IOException, Exception {
+        StringBuilder builder = new StringBuilder();
+        Future<String> future = executor.submit(() -> {
+            try {
+                Document doc = Jsoup.parse(html);
+                Elements eles = doc.select(articleSelector);
+                extractMd(eles.first().childNodes(), builder);
+                return builder.toString();
+            } catch (Exception e) {
+                log.error("{}", e);
+            }
+            return "null";
+        });
+        return future.get();
+    }
+
+    /**
+     * @Author maoxiaobing
      * @Description crawling
      * @Date 2020/4/24
      * @Param [url]
      * @Return java.lang.String
      */
     @Override
-    public String extract(String url, String articleSelector) throws Exception {
+    public String extractFromUrl(String url, String articleSelector) throws Exception {
         StringBuilder builder = new StringBuilder();
         Future<String> future = executor.submit(() -> {
             try {
                 URL urlObj = new URL(url);
                 Document doc = Jsoup.parse(urlObj, DEFAULT_TIME_OUT);
                 Elements eles = doc.select(articleSelector);
-                extractMd(eles.first().childNodes(), builder, urlObj.getHost());
+                extractMd(eles.first().childNodes(), builder);
                 return builder.toString();
             } catch (Exception e) {
                 log.error("{}", e);
@@ -88,7 +113,7 @@ public class JanShuExtractor extends AbstractExtractor {
      * @param builder
      * @param host
      */
-    public void extractMd(List<Node> eles, StringBuilder builder, String host) {
+    public void extractMd(List<Node> eles, StringBuilder builder) {
         for (Node node : eles) {
             if (node instanceof Element) {
                 Element ele = (Element) node;
@@ -137,9 +162,7 @@ public class JanShuExtractor extends AbstractExtractor {
                 // ul
                 if (nodeName.equals("ul")) {
                     Elements lis = ele.select("li");
-                    lis.forEach(element -> {
-                        builder.append("\n").append(String.format("- %s", element.text())).append("\n");
-                    });
+                    lis.forEach(element -> builder.append("\n").append(String.format("- %s", element.text())).append("\n"));
                     continue;
                 }
                 if (nodeName.equals("ol")) {
@@ -147,6 +170,10 @@ public class JanShuExtractor extends AbstractExtractor {
                     for (int i = 0; i < lis.size(); i++) {
                         builder.append("\n").append(String.format("%s. %s", i + 1, lis.get(i).text())).append("\n");
                     }
+                    continue;
+                }
+                if (nodeName.equals("br")) {
+                    builder.append("\n").append(ele.outerHtml()).append("\n");
                     continue;
                 }
             } else if (node instanceof TextNode) {
@@ -160,7 +187,7 @@ public class JanShuExtractor extends AbstractExtractor {
 
                 }
             }
-            extractMd(node.childNodes(), builder, host);
+            extractMd(node.childNodes(), builder);
         }
     }
 

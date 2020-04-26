@@ -13,6 +13,8 @@ import org.springframework.stereotype.Service;
 
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
+import java.io.IOException;
+import java.net.URL;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -50,6 +52,7 @@ public class TouTiaoExtractor extends AbstractExtractor {
             return a;
         }
     });
+
     /**
      * script执行引擎
      */
@@ -63,11 +66,27 @@ public class TouTiaoExtractor extends AbstractExtractor {
      * @Return java.lang.String
      */
     @Override
-    public String extract(String body, String articleSelector) throws Exception {
+    public String extractFromHtml(String body, String articleSelector) throws Exception {
         StringBuilder builder = new StringBuilder();
         Future<String> future = executor.submit(() -> {
             try {
                 Document doc = Jsoup.parse(body);
+                extractMd(doc.selectFirst(articleSelector).childNodes(), builder);
+                return builder.toString();
+            } catch (Exception e) {
+                log.error("{}", e);
+            }
+            return "null";
+        });
+        return future.get();
+    }
+
+    @Override
+    public String extractFromUrl(String url, String articleSelector) throws IOException, Exception {
+        StringBuilder builder = new StringBuilder();
+        Future<String> future = executor.submit(() -> {
+            try {
+                Document doc = Jsoup.parse(new URL(url), DEFAULT_TIME_OUT);
                 extractMd(doc.selectFirst(articleSelector).childNodes(), builder);
                 return builder.toString();
             } catch (Exception e) {

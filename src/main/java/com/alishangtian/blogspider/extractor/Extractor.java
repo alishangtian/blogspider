@@ -16,7 +16,16 @@ public interface Extractor {
      * @Param [url]
      * @Return java.lang.String
      */
-    public String extract(String url, String articleSelector) throws IOException, Exception;
+    public String extractFromHtml(String html, String articleSelector) throws IOException, Exception;
+
+    /**
+     * @Author maoxiaobing
+     * @Description crawling
+     * @Date 2020/4/24
+     * @Param [url]
+     * @Return java.lang.String
+     */
+    public String extractFromUrl(String url, String articleSelector) throws IOException, Exception;
 
     /**
      * 获取服务编号
