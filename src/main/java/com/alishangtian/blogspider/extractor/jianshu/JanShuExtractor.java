@@ -184,7 +184,6 @@ public class JanShuExtractor extends AbstractExtractor {
                     } else {
                         builder.append(textNode.text());
                     }
-
                 }
             }
             extractMd(node.childNodes(), builder);
