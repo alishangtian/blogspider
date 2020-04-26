@@ -3,4 +3,10 @@ spring:
     name: blogspider
 server:
   port: 8080
+blog:
+  path:
+    post: /usr/local/techblog/_posts
+    img: /usr/local/techblog/img
+
+
 
