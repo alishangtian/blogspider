@@ -24,11 +24,13 @@ public class Application {
 
     @GetMapping("/extract/jianshu")
     public String extractJanshu(@RequestParam String url, @RequestParam String articleSelector) throws Exception {
+        log.info("/extract/jianshu url:{},articleSelector:{}", url, articleSelector);
         return extractorManager.getExtractor("jianshu").extract(url, articleSelector);
     }
 
     @PostMapping("/extract/toutiao")
     public String extractToutiao(@RequestBody String body, @RequestParam String articleSelector) throws Exception {
+        log.info("/extract/toutiao articleSelector:{}", articleSelector);
         return extractorManager.getExtractor("toutiao").extract(body, articleSelector);
     }
 
