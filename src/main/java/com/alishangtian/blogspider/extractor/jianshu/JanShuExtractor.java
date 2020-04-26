@@ -2,6 +2,7 @@ package com.alishangtian.blogspider.extractor.jianshu;
 
 import com.alishangtian.blogspider.extractor.AbstractExtractor;
 import lombok.extern.log4j.Log4j2;
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -151,7 +152,12 @@ public class JanShuExtractor extends AbstractExtractor {
             } else if (node instanceof TextNode) {
                 TextNode textNode = (TextNode) node;
                 if (StringUtils.isNotEmpty(textNode.text())) {
-                    builder.append(textNode.text());
+                    if (node.parentNode().nodeName().equals("p") && node.siblingNodes().isEmpty()) {
+                        builder.append(textNode.text()).append("\n");
+                    } else {
+                        builder.append(textNode.text());
+                    }
+
                 }
             }
             extractMd(node.childNodes(), builder, host);
