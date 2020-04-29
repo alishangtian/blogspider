@@ -18,5 +18,5 @@ public class Pong {
     /**
      * 知道的节点
      */
-    private List<String> nodes;
+    private List<Node> nodes;
 }

@@ -14,5 +14,5 @@ public class Ping {
      * 知道的节点
      */
     private List<String> nodes;
-    private String message;
+    private String server;
 }
