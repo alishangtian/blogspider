@@ -1,14 +1,12 @@
 package com.alishangtian.blogspider.service;
 
 import com.alishangtian.blogspider.cluster.Node;
-import com.alishangtian.blogspider.remoting.Remoting;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.function.BiConsumer;
 
 /**
  * @Description TopicService
@@ -46,6 +44,6 @@ public class TopicService {
      */
     public void ping() {
         log.info("{}", "ping");
-        nodes.forEach((s, node) -> Remoting.ping(new Node(s), nodes.values()));
+        //nodes.forEach((s, node) -> Remoting.ping(new Node(s), nodes.values()));
     }
 }

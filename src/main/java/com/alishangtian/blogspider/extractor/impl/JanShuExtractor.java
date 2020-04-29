@@ -1,4 +1,4 @@
-package com.alishangtian.blogspider.extractor.jianshu;
+package com.alishangtian.blogspider.extractor.impl;
 
 import com.alishangtian.blogspider.extractor.AbstractExtractor;
 import lombok.extern.log4j.Log4j2;
@@ -147,11 +147,6 @@ public class JanShuExtractor extends AbstractExtractor {
                     }
                     continue;
                 }
-                // a
-                if (nodeName.equals("a")) {
-                    builder.append("\n").append(ele.outerHtml()).append("\n");
-                    continue;
-                }
                 // strong
                 if (nodeName.equals("strong")) {
                     builder.append("\n").append(String.format("***%s***", ele.ownText())).append("\n");
@@ -163,6 +158,7 @@ public class JanShuExtractor extends AbstractExtractor {
                     lis.forEach(element -> builder.append("\n").append(String.format("- %s", element.text())).append("\n"));
                     continue;
                 }
+                //ol
                 if (nodeName.equals("ol")) {
                     Elements lis = ele.select("li");
                     for (int i = 0; i < lis.size(); i++) {
@@ -170,7 +166,18 @@ public class JanShuExtractor extends AbstractExtractor {
                     }
                     continue;
                 }
+                //br
                 if (nodeName.equals("br")) {
+                    builder.append("\n").append(ele.outerHtml()).append("\n");
+                    continue;
+                }
+                //table
+                if (nodeName.equals("table")) {
+                    builder.append("\n").append(ele.outerHtml()).append("\n");
+                    continue;
+                }
+                // a
+                if (nodeName.equals("a")) {
                     builder.append("\n").append(ele.outerHtml()).append("\n");
                     continue;
                 }

@@ -1,4 +1,4 @@
-package com.alishangtian.blogspider.extractor.jianshu;
+package com.alishangtian.blogspider.extractor.impl;
 
 import com.alishangtian.blogspider.extractor.AbstractExtractor;
 import lombok.extern.log4j.Log4j2;
