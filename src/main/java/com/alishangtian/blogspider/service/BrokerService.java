@@ -3,12 +3,15 @@ package com.alishangtian.blogspider.service;
 import com.alishangtian.blogspider.cluster.BrokerProperties;
 import com.alishangtian.blogspider.cluster.Node;
 import com.alishangtian.blogspider.remoting.Remoting;
+import com.alishangtian.blogspider.util.JSONUtils;
+import com.google.gson.reflect.TypeToken;
 import lombok.extern.log4j.Log4j2;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
+import java.util.List;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
@@ -44,6 +47,7 @@ public class BrokerService {
     });
 
     private ConcurrentMap<String, Node> activeNodes;
+    private ConcurrentMap<String, Node> susoutNodes = new ConcurrentHashMap<>();
 
     @PostConstruct
     public void init() {
@@ -72,5 +76,20 @@ public class BrokerService {
                 });
             }
         });
+    }
+
+    /**
+     * @Author maoxiaobing
+     * @Description pong
+     * @Date 2020/4/30
+     * @Param [server, port, body]
+     * @Return java.lang.String
+     */
+    public String pong(String server, int port, String body) {
+        List<Node> nodes = JSONUtils.parseObject(body, new TypeToken<List<Node>>() {
+        }.getType());
+        nodes.add(new Node(server, port));
+        nodes.forEach(node -> activeNodes.putIfAbsent(node.getServer(), node));
+        return "pong";
     }
 }

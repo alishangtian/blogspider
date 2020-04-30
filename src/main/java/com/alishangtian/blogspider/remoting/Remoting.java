@@ -1,5 +1,6 @@
 package com.alishangtian.blogspider.remoting;
 
+import com.alishangtian.blogspider.cluster.BrokerProperties;
 import com.alishangtian.blogspider.cluster.Node;
 import com.alishangtian.blogspider.util.JSONUtils;
 import lombok.extern.log4j.Log4j2;
@@ -23,10 +24,11 @@ public class Remoting {
     public static final MediaType JSON
             = MediaType.get("application/json; charset=utf-8");
 
-    public static boolean ping(String server, Collection<Node> knownNodes) {
+    public static boolean ping(String server, Collection<Node> knownNodes, String cuServer, int cuPort) {
         RequestBody body = RequestBody.create(JSONUtils.toJSONString(knownNodes), JSON);
+        String url = "http://" + server + "/ping" + "/" + cuServer + "/" + cuPort;
         Request request = new Request.Builder()
-                .url("http://" + server + "/ping")
+                .url(url)
                 .post(body)
                 .build();
         try (Response response = client.newCall(request).execute()) {
