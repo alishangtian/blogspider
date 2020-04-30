@@ -7,6 +7,7 @@ import lombok.extern.log4j.Log4j2;
 import okhttp3.*;
 
 import java.io.IOException;
+import java.time.Duration;
 import java.util.Collection;
 
 /**
@@ -20,7 +21,12 @@ import java.util.Collection;
  */
 @Log4j2
 public class Remoting {
-    private static OkHttpClient client = new OkHttpClient();
+    private static OkHttpClient client = new OkHttpClient()
+            .newBuilder()
+            .readTimeout(Duration.ofSeconds(5))
+            .writeTimeout(Duration.ofSeconds(5))
+            .connectTimeout(Duration.ofSeconds(5))
+            .build();
     public static final MediaType JSON
             = MediaType.get("application/json; charset=utf-8");
 

@@ -14,8 +14,6 @@ import javax.annotation.PostConstruct;
 import java.util.List;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.function.Consumer;
-import java.util.function.Function;
 
 /**
  * @Description TopicService
@@ -47,7 +45,7 @@ public class BrokerService {
     });
 
     private ConcurrentMap<String, Node> activeNodes;
-    private ConcurrentMap<String, Node> susoutNodes = new ConcurrentHashMap<>();
+    private ConcurrentMap<String, Node> outNodes = new ConcurrentHashMap<>();
 
     @PostConstruct
     public void init() {
@@ -55,7 +53,7 @@ public class BrokerService {
         /**
          * ping schedule
          */
-        scheduledExecutorService.scheduleWithFixedDelay(() -> ping(), 0, 5000, TimeUnit.MILLISECONDS);
+        scheduledExecutorService.scheduleWithFixedDelay(() -> ping(), 0, 10000, TimeUnit.MILLISECONDS);
     }
 
     /**
@@ -70,7 +68,7 @@ public class BrokerService {
             if (!s.equals(brokerProperties.getSelfServer())) {
                 log.info("ping {}", s);
                 threadPoolExecutor.submit(() -> {
-                    if (!Remoting.ping(s, activeNodes.values())) {
+                    if (!Remoting.ping(s, activeNodes.values(), brokerProperties.getSelfServer(), brokerProperties.getPort())) {
                         activeNodes.remove(s);
                     }
                 });
