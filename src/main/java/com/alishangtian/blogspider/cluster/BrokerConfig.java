@@ -18,11 +18,13 @@ import java.util.List;
  **/
 @Configuration
 @Getter
-public class BrokerProperties {
+public class BrokerConfig {
     @Value("${server.port}")
     private int port;
     @Value("${brokers.nodes}")
     private String nodes;
+    @Value("${brokers.ping.enabled}")
+    private boolean pingEnabled;
     private List<String> nodeList;
     private String selfServer;
 

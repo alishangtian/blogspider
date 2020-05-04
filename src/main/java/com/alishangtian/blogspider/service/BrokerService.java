@@ -1,13 +1,11 @@
 package com.alishangtian.blogspider.service;
 
-import com.alishangtian.blogspider.cluster.BrokerProperties;
+import com.alishangtian.blogspider.cluster.BrokerConfig;
 import com.alishangtian.blogspider.cluster.Node;
 import com.alishangtian.blogspider.remoting.Remoting;
 import com.alishangtian.blogspider.util.JSONUtils;
 import com.google.gson.reflect.TypeToken;
 import io.netty.util.HashedWheelTimer;
-import io.netty.util.Timeout;
-import io.netty.util.TimerTask;
 import lombok.extern.log4j.Log4j2;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,7 +25,7 @@ import java.util.concurrent.atomic.AtomicLong;
 @Log4j2
 public class BrokerService {
     @Autowired
-    private BrokerProperties brokerProperties;
+    private BrokerConfig brokerConfig;
 
     private ScheduledExecutorService scheduledExecutorService = new ScheduledThreadPoolExecutor(1, new ThreadFactory() {
         AtomicLong num = new AtomicLong();
@@ -59,11 +57,13 @@ public class BrokerService {
 
     @PostConstruct
     public void init() {
-        brokerProperties.getNodeList().forEach(s -> activeNodes.put(s, new Node(s)));
+        brokerConfig.getNodeList().forEach(s -> activeNodes.put(s, new Node(s)));
         /**
          * ping schedule
          */
-        scheduledExecutorService.scheduleWithFixedDelay(() -> ping(), 0, 10000, TimeUnit.MILLISECONDS);
+        if (brokerConfig.isPingEnabled()) {
+            scheduledExecutorService.scheduleWithFixedDelay(() -> ping(), 0, 10000, TimeUnit.MILLISECONDS);
+        }
     }
 
     /**
@@ -82,10 +82,10 @@ public class BrokerService {
     }
 
     private void pingServer(String s, Node node) {
-        if (!s.equals(brokerProperties.getSelfServer())) {
+        if (!s.equals(brokerConfig.getSelfServer())) {
             log.info("ping {}", s);
             threadPoolExecutor.submit(() -> {
-                if (!Remoting.ping(s, activeNodes.values(), brokerProperties.getSelfServer(), brokerProperties.getPort())) {
+                if (!Remoting.ping(s, activeNodes.values(), brokerConfig.getSelfServer(), brokerConfig.getPort())) {
                     activeNodes.remove(s);
                     outNodes.putIfAbsent(s, node);
                     timer.newTimeout(timeout -> pingServer(s, node), 5, TimeUnit.SECONDS);

@@ -1,5 +1,7 @@
 package com.alishangtian.blogspider.controller;
 
+import com.alishangtian.blogspider.service.BrokerService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -12,6 +14,9 @@ import org.springframework.web.bind.annotation.RestController;
  **/
 @RestController
 public class BrokerController {
+    @Autowired
+    private BrokerService brokerService;
+
     /**
      * @Author maoxiaobing
      * @Description publish
@@ -21,6 +26,6 @@ public class BrokerController {
      */
     @PostMapping("/ping/{server}/{port}")
     public String ping(@PathVariable int port, @PathVariable String server, @RequestBody String body) {
-        return null;
+        return brokerService.pong(server, port, body);
     }
 }

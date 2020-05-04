@@ -1,6 +1,5 @@
 package com.alishangtian.blogspider.remoting;
 
-import com.alishangtian.blogspider.cluster.BrokerProperties;
 import com.alishangtian.blogspider.cluster.Node;
 import com.alishangtian.blogspider.util.JSONUtils;
 import lombok.extern.log4j.Log4j2;
@@ -39,7 +38,7 @@ public class Remoting {
                 .build();
         try (Response response = client.newCall(request).execute()) {
             return response.body().string().equals("pong");
-        } catch (IOException e) {
+        } catch (Exception e) {
             log.error("{}", e);
             return false;
         }
