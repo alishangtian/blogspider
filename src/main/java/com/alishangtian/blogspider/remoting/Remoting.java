@@ -43,4 +43,17 @@ public class Remoting {
             return false;
         }
     }
+
+    public static void subjectiveOut(String server, Node targetOut, String cuServer, int cuPort) {
+        RequestBody body = RequestBody.create(JSONUtils.toJSONString(targetOut), JSON);
+        String url = "http://" + server + "/subout" + "/" + cuServer + "/" + cuPort;
+        Request request = new Request.Builder()
+                .url(url)
+                .post(body)
+                .build();
+        try (Response response = client.newCall(request).execute()) {
+        } catch (Exception e) {
+            log.error("{}", e);
+        }
+    }
 }

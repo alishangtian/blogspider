@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 import javax.annotation.PostConstruct;
 import java.util.List;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
@@ -27,12 +28,14 @@ public class BrokerService {
     @Autowired
     private BrokerConfig brokerConfig;
 
+    private static final int DEFAULT_MAX_SUBJECTIVE_COUNT = 3;
+
     private ScheduledExecutorService scheduledExecutorService = new ScheduledThreadPoolExecutor(1, new ThreadFactory() {
         AtomicLong num = new AtomicLong();
 
         @Override
         public Thread newThread(Runnable r) {
-            return new Thread(r, "broker-schedule-thread-" + num.getAndIncrement());
+            return new Thread(r, "broker-ping-schedule-pool-thread-" + num.getAndIncrement());
         }
     });
 
@@ -41,11 +44,13 @@ public class BrokerService {
 
         @Override
         public Thread newThread(@NotNull Runnable r) {
-            return new Thread(r, "broker-ping-thread-" + num.getAndIncrement());
+            return new Thread(r, "broker-ping/broadcast-pool-thread-" + num.getAndIncrement());
         }
     });
+
     private ConcurrentMap<String, Node> activeNodes = new ConcurrentHashMap<>();
     private ConcurrentMap<String, Node> outNodes = new ConcurrentHashMap<>();
+    private ConcurrentMap<String, AtomicInteger> outCounter = new ConcurrentHashMap<>();
     private HashedWheelTimer timer = new HashedWheelTimer(new ThreadFactory() {
         AtomicLong num = new AtomicLong();
 
@@ -81,6 +86,28 @@ public class BrokerService {
         });
     }
 
+    /**
+     * 执行主观下线广播
+     *
+     * @Author maoxiaobing
+     * @Description ping
+     * @Date 2020/4/28
+     * @Param []
+     * @Return void
+     */
+    public void subjectiveOut(Node outNode) {
+        activeNodes.forEach((s, node) -> {
+            Remoting.subjectiveOut(s, outNode, brokerConfig.getSelfServer(), brokerConfig.getPort());
+        });
+    }
+
+    /**
+     * @Author maoxiaobing
+     * @Description pingServer
+     * @Date 2020/5/7
+     * @Param [s, node]
+     * @Return void
+     */
     private void pingServer(String s, Node node) {
         if (!s.equals(brokerConfig.getSelfServer())) {
             log.info("ping {}", s);
@@ -88,7 +115,17 @@ public class BrokerService {
                 if (!Remoting.ping(s, activeNodes.values(), brokerConfig.getSelfServer(), brokerConfig.getPort())) {
                     activeNodes.remove(s);
                     outNodes.putIfAbsent(s, node);
-                    timer.newTimeout(timeout -> pingServer(s, node), 5, TimeUnit.SECONDS);
+                    AtomicInteger counter = outCounter.get(s);
+                    if (null == counter) {
+                        counter = new AtomicInteger(1);
+                    }
+                    if (counter.intValue() >= DEFAULT_MAX_SUBJECTIVE_COUNT) {
+                        threadPoolExecutor.submit(() -> subjectiveOut(node));
+                        return;
+                    }
+                    timer.newTimeout(timeout -> {
+                        pingServer(s, node);
+                    }, 5, TimeUnit.SECONDS);
                 } else {
                     activeNodes.putIfAbsent(s, node);
                     outNodes.remove(s);
