@@ -9,11 +9,11 @@ import org.jsoup.nodes.Element;
 import org.jsoup.nodes.Node;
 import org.jsoup.nodes.TextNode;
 import org.jsoup.select.Elements;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Service;
 
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
-import java.io.IOException;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.List;
@@ -28,6 +28,7 @@ import java.util.concurrent.atomic.AtomicLong;
  */
 @Service
 @Log4j2
+@Order(0)
 public class TouTiaoExtractor extends AbstractExtractor {
     private static final String SERVICE_CODE = "toutiao";
     static Map<String, String> hTagMap = new HashMap<>();
@@ -66,7 +67,7 @@ public class TouTiaoExtractor extends AbstractExtractor {
      * @Return java.lang.String
      */
     @Override
-    public String extractFromHtml(String body, String articleSelector) throws Exception {
+    public String extractFromHtml(String body, String articleSelector) {
         StringBuilder builder = new StringBuilder();
         Future<String> future = executor.submit(() -> {
             try {
@@ -78,11 +79,16 @@ public class TouTiaoExtractor extends AbstractExtractor {
             }
             return "null";
         });
-        return future.get();
+        try {
+            return future.get();
+        } catch (Exception e) {
+            log.error("{}", e);
+        }
+        return "null";
     }
 
     @Override
-    public String extractFromUrl(String url, String articleSelector) throws IOException, Exception {
+    public String extractFromUrl(String url, String articleSelector) {
         StringBuilder builder = new StringBuilder();
         Future<String> future = executor.submit(() -> {
             try {
@@ -94,12 +100,22 @@ public class TouTiaoExtractor extends AbstractExtractor {
             }
             return "null";
         });
-        return future.get();
+        try {
+            return future.get();
+        } catch (Exception e) {
+            log.error("{}", e);
+        }
+        return "null";
     }
 
     @Override
     public String getServiceCode() {
         return SERVICE_CODE;
+    }
+
+    @Override
+    public boolean match(String html) {
+        return true;
     }
 
     /**

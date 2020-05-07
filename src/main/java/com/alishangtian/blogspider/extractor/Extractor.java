@@ -16,7 +16,7 @@ public interface Extractor {
      * @Param [url]
      * @Return java.lang.String
      */
-    public String extractFromHtml(String html, String articleSelector) throws IOException, Exception;
+    public String extractFromHtml(String html, String articleSelector);
 
     /**
      * @Author maoxiaobing
@@ -25,7 +25,7 @@ public interface Extractor {
      * @Param [url]
      * @Return java.lang.String
      */
-    public String extractFromUrl(String url, String articleSelector) throws IOException, Exception;
+    public String extractFromUrl(String url, String articleSelector);
 
     /**
      * 获取服务编号
@@ -33,5 +33,14 @@ public interface Extractor {
      * @return
      */
     public String getServiceCode();
+
+    /**
+     * @Author maoxiaobing
+     * @Description match
+     * @Date 2020/5/7
+     * @Param [html]
+     * @Return boolean
+     */
+    public boolean match(String html);
 
 }

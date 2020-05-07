@@ -9,8 +9,8 @@ import java.io.IOException;
  **/
 public abstract class AbstractExtractor implements Extractor {
     @Override
-    public abstract String extractFromHtml(String html, String articleSelector) throws IOException, Exception;
+    public abstract String extractFromHtml(String html, String articleSelector);
 
     @Override
-    public abstract String extractFromUrl(String url, String articleSelector) throws IOException, Exception;
+    public abstract String extractFromUrl(String url, String articleSelector);
 }
