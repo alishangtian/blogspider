@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 import javax.annotation.PostConstruct;
 import java.util.List;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -115,11 +116,16 @@ public class BrokerService {
                 if (!Remoting.ping(s, activeNodes.values(), brokerConfig.getSelfServer(), brokerConfig.getPort())) {
                     activeNodes.remove(s);
                     outNodes.putIfAbsent(s, node);
-                    AtomicInteger counter = outCounter.get(s);
-                    if (null == counter) {
-                        counter = new AtomicInteger(1);
-                    }
-                    if (counter.intValue() >= DEFAULT_MAX_SUBJECTIVE_COUNT) {
+                    AtomicBoolean out = new AtomicBoolean(false);
+                    outCounter.compute(s, (k, v) -> {
+                        if (v == null) {
+                            return new AtomicInteger(1);
+                        } else {
+                            out.set(v.incrementAndGet() >= DEFAULT_MAX_SUBJECTIVE_COUNT);
+                            return v;
+                        }
+                    });
+                    if (out.get()) {
                         threadPoolExecutor.submit(() -> subjectiveOut(node));
                         return;
                     }
