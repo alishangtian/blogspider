@@ -4,6 +4,8 @@ import com.alishangtian.blogspider.cluster.BrokerConfig;
 import com.alishangtian.blogspider.cluster.Node;
 import com.alishangtian.blogspider.remoting.Remoting;
 import com.alishangtian.blogspider.util.JSONUtils;
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.HashMultimap;
 import com.google.gson.reflect.TypeToken;
 import io.netty.util.HashedWheelTimer;
 import lombok.extern.log4j.Log4j2;
@@ -52,6 +54,7 @@ public class BrokerService {
     private ConcurrentMap<String, Node> activeNodes = new ConcurrentHashMap<>();
     private ConcurrentMap<String, Node> outNodes = new ConcurrentHashMap<>();
     private ConcurrentMap<String, AtomicInteger> outCounter = new ConcurrentHashMap<>();
+    private HashMultimap<String, String> subOutNodes = HashMultimap.create();
     private HashedWheelTimer timer = new HashedWheelTimer(new ThreadFactory() {
         AtomicLong num = new AtomicLong();
 
@@ -138,6 +141,19 @@ public class BrokerService {
                 }
             });
         }
+    }
+
+    /**
+     * @Author maoxiaobing
+     * @Description pongSubOut
+     * @Date 2020/5/9
+     * @Param [server, port, body]
+     * @Return java.lang.String
+     */
+    public String pongSubOut(String server, int port, String body) {
+        Node subOutNode = JSONUtils.parseObject(body, Node.class);
+        subOutNodes.put(subOutNode.getServer(), new Node(server, port).getServer());
+        return "success";
     }
 
     /**

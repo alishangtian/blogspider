@@ -28,4 +28,16 @@ public class BrokerController {
     public String ping(@PathVariable int port, @PathVariable String server, @RequestBody String body) {
         return brokerService.pong(server, port, body);
     }
+
+    /**
+     * @Author maoxiaobing
+     * @Description publish
+     * @Date 2020/4/26
+     * @Param []
+     * @Return java.lang.String
+     */
+    @PostMapping("/subout/{server}/{port}")
+    public String subout(@PathVariable int port, @PathVariable String server, @RequestBody String body) {
+        return brokerService.pongSubOut(server, port, body);
+    }
 }
